@@ -33,7 +33,7 @@ jobs:
 
     # 4. Run the scraper script
     - name: Run Scraper
-      run: python your_script_name.py # ⚠️ Make sure to rename this to your actual file name
+      run: python scrapping.py # ⚠️ Make sure to rename this to your actual file name
 
     # 5. Upload downloaded images as Artifacts
     - name: Upload Downloaded Images
