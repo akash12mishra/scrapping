@@ -1,0 +1,61 @@
+name: Automate Movie Scraper
+
+on:
+  schedule:
+    # Runs every day at midnight UTC (Adjust as needed)
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    # Allows you to trigger the script manually from the GitHub UI
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Checkout the repository code
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    # 2. Set up Python environment
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip' # Optimizes subsequent runs
+
+    # 3. Install required dependencies
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests beautifulsoup4
+
+    # 4. Run the scraper script
+    - name: Run Scraper
+      run: python your_script_name.py # ⚠️ Make sure to rename this to your actual file name
+
+    # 5. Upload downloaded images as Artifacts
+    - name: Upload Downloaded Images
+      if: always() # Runs even if the script hits your 5-hour safety stop
+      uses: actions/upload-artifact@v4
+      with:
+        name: movie-downloads-${{ github.run_id }}
+        path: downloads/
+        retention-days: 7 # Keeps the zip file for 7 days
+
+    # 6. Commit and Push the updated CSV file back to the repo
+    - name: Commit and Push CSV Updates
+      if: always()
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        
+        # Check if movies.csv actually changed
+        git add movies.csv
+        if ! git diff --cached --quiet; then
+          git commit -m "🤖 Auto-updated movie processing status [skip ci]"
+          git push
+        else
+          echo "No changes to movies.csv status."
+        fi
